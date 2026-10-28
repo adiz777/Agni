@@ -2,18 +2,17 @@
 
 <img src="docs/assets/agni-logo.svg" alt="Agni Endpoint Defense & SOC Logo" width="460" />
 
-### Sovereign, Local-First Threat Detection & Endpoint Security Operations
+### Cross-Platform, Local-First Threat Detection & Endpoint Security Operations
 
-[![CI](https://github.com/adiz777/Agni/actions/workflows/ci.yml/badge.svg)](https://github.com/adiz777/Agni/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-brightgreen.svg?style=flat-square)](tests/)
-[![Coverage](https://img.shields.io/badge/Coverage-98%25-success.svg?style=flat-square)](tests/)
+[![Agni CI](https://github.com/adiz777/Agni/actions/workflows/ci.yml/badge.svg)](https://github.com/adiz777/Agni/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg?style=flat-square)](docs/platform-support.md)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg?style=flat-square&logo=python&logoColor=white)](backend/)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square&logo=react&logoColor=black)](frontend/)
-[![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-v14%20Aligned-red.svg?style=flat-square)](backend/rules/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?style=flat-square&logo=typescript&logoColor=white)](frontend/)
+[![Security Policy](https://img.shields.io/badge/Security-Responsible%20Disclosure-brightgreen.svg?style=flat-square)](SECURITY.md)
 
-[Overview](#-overview) • [Screenshots](#-screenshot-gallery) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Detection Rules](#-declarative-varuna-rule-engine) • [Platform Matrix](#-platform-support-matrix) • [Security](#-security--privacy-guarantees) • [Author](#-author--credits)
+[Overview](#-overview) • [Features](#-feature-highlights) • [Screenshots](#-screenshots--demonstrations) • [Architecture](#-architecture) • [Platform Matrix](#-platform-compatibility-matrix) • [Quick Start](#-quick-start) • [Configuration](#-configuration) • [Detection Engine](#-detection-engine) • [Security & Privacy](#-security--privacy) • [Testing](#-testing--quality) • [Structure](#-project-structure) • [Roadmap](#-roadmap) • [Contributing](#-contributing) • [License](#-license--attribution)
 
 </div>
 
@@ -21,48 +20,73 @@
 
 ## 🛡️ Overview
 
-**Agni (अग्नि)** is a high-performance, **local-first defensive endpoint threat detection and security operations (SOC) platform**. Named after the primordial Sanskrit concept of the vigilant flame and sacred guardian, Agni transforms raw host operating system telemetry into actionable cyber threat intelligence—without ever exposing confidential internal telemetry to third-party cloud infrastructure.
+**Agni (अग्नि)** is a local-first, cross-platform endpoint monitoring and threat detection platform with real-time event correlation and an interactive Security Operations Center (SOC) dashboard. Named after the Sanskrit word for the vigilant flame, Agni transforms host process, file integrity, persistence, and network telemetry into explainable security findings without shipping host telemetry to external cloud infrastructure.
 
-Traditional endpoint agents often compromise system stability with invasive kernel drivers, exfiltrate raw user data to proprietary clouds, and cause alert fatigue with uncoordinated notifications. Agni solves this through:
-
-- **100% Sovereign Local Telemetry**: All host observation, process auditing, network connection mapping, and file integrity baselines are processed and stored strictly on local loopback (`127.0.0.1`).
-- **Epistemic Sensor Layer**: Non-destructive, read-only collection across Windows, Linux, and macOS with deterministic privilege degradation.
-- **Varuna AST Correlation Engine**: Multi-stage attack detection via declarative YAML/JSON rules mapped to MITRE ATT&CK, synthesized across a temporal sliding window.
-- **Tamper-Evident Cryptographic Audit Trail**: Immutable SHA-256 hash-chained audit logs ensuring zero repudiation.
-- **Modern Cyber SOC Dashboard**: Fast, responsive React 18 / TypeScript single-page application with real-time Kanban triage, threat posture calculations, and offline AI analyst assistance.
+### Why Agni?
+Basic system-monitoring scripts list processes or sockets without security context, while commercial EDR agents require kernel drivers, cloud accounts, and opaque black-box scoring. Agni bridges that gap for blue-team engineers, security researchers, students, and privacy-conscious operators by providing:
+- **Local-First Sovereignty**: All collection, normalization, rule evaluation, and SQLite (WAL) persistence run strictly on `127.0.0.1` by default.
+- **Observed Facts vs. Interpretations**: Every alert separates raw OS observations (PID, SHA-256 hash, socket tuple, command line) from the rule's analytical interpretation and recommended investigation steps.
+- **Honest Scope**: Agni is a user-space defensive monitoring and correlation platform—not a kernel-mode EDR, antivirus replacement, or automated remediation engine. It never silently kills processes, deletes files, or alters firewall rules.
 
 ---
 
-## 📸 Screenshot Gallery
+## ✨ Feature Highlights
+
+### Module A — Agni Core: Endpoint & File Integrity Monitoring
+- **Process Inventory & Inspection**: Enumerates active processes with PID, PPID, parent-child lineage, executable path, SHA-256 binary hash (where readable), start time, username, and CPU/memory usage.
+- **File Integrity Monitoring (FIM)**: User-configured directory baselines using chunked SHA-256 hashing (`64 KB` blocks, `100 MB` per-file safety ceiling) to detect file creation, modification, and deletion.
+- **Read-Only Startup & Persistence Visibility**: Inspects OS-specific autostart locations (Windows Run/RunOnce Registry keys, Startup folders, and scheduled tasks; Linux `systemd` units, cron, and shell profiles; macOS `LaunchAgents` and `LaunchDaemons`).
+- **Sensor Health Telemetry**: Tracks collector status, latency, and permission degradation across subsystems.
+
+### Module B — Vayu: Network Intelligence
+- **Interface & Socket Inventory**: Lists local network adapters (IPv4/IPv6/MAC, link speed, UP/DOWN status) and active TCP/UDP connections mapped to owning PIDs.
+- **Authorized Scope & Passive Device Discovery**: Validates private RFC 1918 CIDR scopes and reads the local OS ARP cache (`arp -a` / `arp -an` with `shell=False`) to track known LAN neighbors with first-seen and last-seen timestamps.
+- **Connection Anomaly Detection**: Flags suspicious outbound ports, non-standard C2 channels, and unusual per-process socket volume.
+
+### Module C — Varuna: Event Intelligence & Correlation
+- **Normalized Event Pipeline**: Converts heterogeneous OS telemetry into a versioned common event schema (`PROCESS`, `FILE`, `NETWORK`, `PERSISTENCE`, `AUTH`, `SYSTEM`) with five severity tiers (`INFO`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+- **Declarative AST Rule Engine**: Evaluates YAML/JSON rules (`all`, `any`, `not`, `equals`, `contains`, `startswith`, `endswith`, `regex`, `in`) against live or sample telemetry.
+- **Sliding-Window Correlation & Deduplication**: Correlates related detections within configurable time windows (default `300s`) into structured Incidents with Kanban status (`NEW`, `TRIAGED`, `IN_PROGRESS`, `RESOLVED`, `FALSE_POSITIVE`), analyst notes, and JSON/CSV/HTML export.
+- **Sample / Demo Telemetry Mode (Explicitly Labeled)**: Generates isolated multi-stage intrusion scenarios (`apt_intrusion`, `ransomware_prep`, `lateral_movement`) clearly tagged as sample data (`source="sample_generator"`) and purgeable in one click.
+
+### SOC Dashboard & Optional AI Analyst
+- **12 Integrated SOC Views**: Overview, Live Events, Incidents, Process Explorer, File Integrity, Network Intelligence, Detection Rules, Startup & Persistence, Reports, Audit Logs, Settings, and Diagnostics & About.
+- **Optional AI Investigation Assistant (Disabled by Default)**: Supports local Ollama endpoints (`http://127.0.0.1:11434`) or user-configured hosted endpoints with explicit consent prompts, automatic PII/secret redaction (`TelemetryRedactor`), and deterministic offline fallback.
+
+---
+
+## 📸 Screenshots & Demonstrations
+
+> **Note on Demonstration Data:** The screenshots below were captured from the live FastAPI + React application running on Windows with the explicitly labeled **Sample APT Intrusion Scenario** seeded alongside read-only local host adapter/process views. No private credentials or sensitive personal files are shown.
 
 <div align="center">
 
-### Situational Overview & Real-Time Threat Posture
-*Real-time Threat Posture score, sensor component health, active incidents, and top triage queue.*
+### 1. Situational Overview & Real-Time Threat Posture
+*Displays endpoint threat posture score, sensor health status, severity breakdown, and active incident triage queue.*
 <img src="docs/assets/overview.png" alt="Agni SOC Overview Dashboard" width="95%" />
 
 <br/><br/>
 
-### Live Host Telemetry Event Stream
-*Continuous streaming telemetry table with category filters, severity tags, and instant search.*
+### 2. Live Events Stream & Evidence Inspector
+*Filterable event stream with severity/category filters, search, and observed telemetry details.*
 <img src="docs/assets/live-events.png" alt="Agni Live Telemetry Stream" width="95%" />
 
 <br/><br/>
 
-### Multi-Stage Incident Investigation & Kanban Triage
-*Correlated multi-stage adversary incidents arranged into interactive Kanban workflow columns.*
+### 3. Incidents & Kanban Investigation Workflow
+*Correlated multi-stage security incidents grouped by rule and entity across workflow columns.*
 <img src="docs/assets/incidents.png" alt="Agni Incident Investigation Kanban" width="95%" />
 
 <br/><br/>
 
-### Vayu Network Intelligence & Socket Mapping
-*Network interface adapters, process-to-socket ownership, and passive ARP device discovery.*
+### 4. Vayu Network Intelligence & Socket Ownership
+*Local network interfaces, active socket-to-PID mappings, and passive ARP neighbor inventory.*
 <img src="docs/assets/network-intel.png" alt="Agni Vayu Network Intelligence" width="95%" />
 
 <br/><br/>
 
-### File Integrity Monitoring (FIM SHA-256)
-*Cryptographic chunked SHA-256 baselines across sensitive system paths and persistence locations.*
+### 5. File Integrity Monitoring (SHA-256 Baselines)
+*Configured directory baselines, verification timestamps, and cryptographic hash drift records.*
 <img src="docs/assets/file-integrity.png" alt="Agni File Integrity Monitoring" width="95%" />
 
 </div>
@@ -71,39 +95,40 @@ Traditional endpoint agents often compromise system stability with invasive kern
 
 ## 🏛 Architecture
 
-Agni's pipeline cleanly decouples OS telemetry observation from rule evaluation, persistence, and presentation:
+Agni separates OS-specific telemetry collection (`backend/app/platform/`) from normalization, AST rule evaluation (`backend/app/engine/`), SQLite WAL persistence, and the React 18 frontend:
 
 ```mermaid
 flowchart TD
     subgraph Host["Host Operating System"]
-        Proc[Process Tree & Subsystems]
-        Net[Sockets, Adapters & ARP Cache]
-        FS[Monitored Filesystem Paths]
-        Pers[Startup Keys & System Daemons]
+        Proc["Process Tree & Resource Metrics"]
+        Net["Network Interfaces, Sockets & ARP Cache"]
+        FS["Configured FIM Baseline Paths"]
+        Pers["Startup Entries & Persistence Locations"]
     end
 
-    subgraph Sensor["Agni Epistemic Sensor Layer"]
-        Collector[Cross-Platform Sensor Collector\n(Windows / Linux / macOS)]
-        Scrubber[Telemetry Scrubber\n(Token, Password & PII Redaction)]
+    subgraph Adapters["Agni Platform Adapters (backend/app/platform)"]
+        Collector["OS Adapter Layer (Windows / Linux / macOS)"]
+        Scrubber["TelemetryRedactor (Secret & Token Redaction)"]
     end
 
-    subgraph Engine["Varuna Detection & Core Engine"]
-        Rules[(18+ MITRE ATT&CK\nDeclarative YAML Rules)]
-        ASTEval[Varuna AST Rule Evaluator]
-        Correlator[Temporal Sliding Window\nIncident Correlator]
-        Audit[SHA-256 Hash-Chained\nCryptographic Audit Trail]
+    subgraph Varuna["Varuna Detection & Correlation Engine"]
+        Rules[("18 Declarative YAML Rules\n(backend/rules/*.yaml)")]
+        ASTEval["Recursive AST Rule Evaluator"]
+        Correlator["Sliding-Window Incident Correlator"]
+        Audit["SHA-256 Hash-Chained Audit Log"]
     end
 
-    subgraph Storage["Local Storage"]
-        DB[(SQLite WAL Database\n127.0.0.1:8000)]
+    subgraph Storage["Local Persistence"]
+        DB[("SQLite WAL Database\n(backend/data/agni.db)")]
     end
 
-    subgraph Gateway["Loopback API Gateway"]
-        FastAPI[FastAPI Security Router\nStrict Loopback Enforcement]
+    subgraph API["FastAPI Loopback Server (127.0.0.1:8000)"]
+        Router["REST API & Export Engine (JSON / CSV / HTML)"]
+        AI["Optional AI Analyst Service (Disabled by Default)"]
     end
 
-    subgraph UI["Cyber SOC Dashboard"]
-        ReactApp[React 18 + Vite + Tailwind\nSOC Workspace & AI Assistant]
+    subgraph UI["React 18 + TypeScript + Vite Dashboard"]
+        Dashboard["12-View SOC Interface"]
     end
 
     Proc & Net & FS & Pers --> Collector
@@ -115,158 +140,299 @@ flowchart TD
     Correlator --> DB
     Correlator --> Audit
     Audit --> DB
-
-    DB --> FastAPI
-    FastAPI <-->|HTTP / WebSocket / 127.0.0.1| ReactApp
+    DB <--> Router
+    Router <--> AI
+    Router <-->|"HTTP (127.0.0.1)"| Dashboard
 ```
 
-For comprehensive details on components, data flow, and class contracts, see [`docs/architecture.md`](docs/architecture.md).
+See [`docs/architecture.md`](docs/architecture.md) for detailed component contracts and data flow.
+
+---
+
+## 💻 Platform Compatibility Matrix
+
+Agni uses `psutil` and OS-specific adapters (`WindowsPlatformAdapter`, `LinuxPlatformAdapter`, `DarwinPlatformAdapter`). When running as a standard non-administrative user, inaccessible system processes or protected files are gracefully skipped and reported in sensor diagnostics rather than crashing the engine.
+
+| Platform | Verification Status | Supported Capabilities | Known Restrictions & Permissions |
+| :--- | :---: | :--- | :--- |
+| **Windows 10 / 11** | **Tested** (Live host + CI) | Process tree, SHA-256 FIM, Registry Run/RunOnce & Startup folder persistence, socket-to-PID mapping, passive `arp -a` discovery, Task Scheduler helper script. | Protected `SYSTEM` processes require elevation for full executable path/hash inspection; works safely as standard user with partial visibility notice. |
+| **Ubuntu / Debian / Kali Linux** | **Tested in CI** (Ubuntu GitHub Actions + unit-tested adapter) | `/proc` process inspection, SHA-256 FIM, `systemd` / `cron` / `rc.local` persistence visibility, socket table, `arp -an` / `/proc/net/arp` discovery, `systemd --user` service helper. | Reading other users' `/proc/<pid>/fd` sockets requires `CAP_NET_ADMIN` or root; standard user sees user-owned sockets and global interface stats. |
+| **macOS (Apple Silicon & Intel)** | **Implemented (Unit-tested via mock)** | `psutil` process & resource inventory, SHA-256 FIM, `~/Library/LaunchAgents` & `/Library/LaunchDaemons` plist inspection, `arp -an` cache parsing, `launchctl` user agent helper. | `psutil.net_connections()` on macOS restricts non-root users from enumerating sockets owned by other UIDs; adapter degrades gracefully and flags permission state. |
+
+See [`docs/platform-support.md`](docs/platform-support.md) for the full feature-by-feature breakdown.
 
 ---
 
 ## ⚡ Quick Start
 
 ### Prerequisites
-- **Python 3.11+**
-- **Node.js 18+** & `npm`
+- **Python 3.11+** (`python --version`)
+- **Node.js 18+** and **npm** (`node --version`)
+- **Git** (`git --version`)
+- *No administrator/root privileges are required for standard operation.*
 
-### 1. Clone Repository
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/adiz777/Agni.git
 cd Agni
 ```
 
-### 2. Start the Backend (API & Varuna Detection Engine)
+### 2. Backend Setup & Launch
 
-#### Windows (PowerShell):
+#### Windows (PowerShell)
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r backend/requirements.txt
+.\.venv\Scripts\Activate.ps1
+pip install -r backend\requirements.txt
+Copy-Item .env.example .env
+
+# Option A: Use the launcher script (validates prerequisites & writes agni.pid)
+.\scripts\windows\start-agni.ps1 -NoBrowser
+
+# Option B: Direct uvicorn command
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --app-dir backend --reload
 ```
 
-#### Linux / macOS (Bash):
+#### Linux / macOS (Bash / Zsh)
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
+cp .env.example .env
+
+# Option A: Use the launcher script
+chmod +x scripts/unix/*.sh
+./scripts/unix/start-agni.sh --no-browser
+
+# Option B: Direct uvicorn command
 python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --app-dir backend --reload
 ```
 
-*The backend initializes SQLite with Write-Ahead Logging (WAL) and synchronizes 18 default defensive rules.*
-
-### 3. Start the Frontend SOC Dashboard
-
+### 3. Frontend Setup & Launch
+Open a second terminal in the repository root:
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Navigate to `http://localhost:5173` in your browser.
+### 4. Access & Stop the Application
+- **SOC Dashboard**: `http://127.0.0.1:5173`
+- **OpenAPI / Swagger UI**: `http://127.0.0.1:8000/docs`
+- **Diagnostics Check**: Run `.\scripts\windows\diagnose-agni.ps1` (Windows) or `./scripts/unix/diagnose-agni.sh` (Unix).
+- **Stop Application**: Press `Ctrl+C` in the terminal or run `.\scripts\windows\stop-agni.ps1` / `./scripts/unix/stop-agni.sh`.
 
 ---
 
-## 📜 Declarative Varuna Rule Engine
+## ⚙️ Configuration
 
-Detection rules in Agni are expressed as human-readable, schema-validated YAML or JSON files. Rules support boolean logic (`and`, `or`, `not`), regular expressions, substring matching, and threshold aggregations.
+Agni reads settings from environment variables or a local `.env` file (see [`.env.example`](.env.example)).
 
-Example: **Detecting Shadow Copy Deletion (Ransomware Preparation)**
+| Variable | Purpose | Default | Sensitive? |
+| :--- | :--- | :--- | :---: |
+| `AGNI_HOST` | Local bind address for the FastAPI backend | `127.0.0.1` | No |
+| `AGNI_PORT` | Local TCP port for the FastAPI backend | `8000` | No |
+| `AGNI_ALLOW_EXTERNAL_BIND` | Permits binding to non-loopback addresses when explicitly set to `true` | `false` | No |
+| `AGNI_DATABASE_URL` | SQLAlchemy SQLite database connection URI | `sqlite:///./data/agni.db` | No |
+| `AGNI_TELEMETRY_INTERVAL_SECONDS` | Polling interval for endpoint process/sensor snapshots | `5` | No |
+| `AGNI_FIM_POLL_INTERVAL_SECONDS` | Verification interval for File Integrity Monitoring baselines | `60` | No |
+| `AGNI_NETWORK_POLL_INTERVAL_SECONDS` | Polling interval for sockets and passive ARP cache | `15` | No |
+| `AGNI_CORRELATION_WINDOW_SECONDS` | Sliding time window used by Varuna to group related detections | `300` | No |
+| `AGNI_EVENT_RETENTION_DAYS` | Days to retain historical events before pruning | `30` | No |
+| `AGNI_MAX_REQUEST_SIZE_BYTES` | Maximum accepted HTTP request body size (`10 MB`) | `10485760` | No |
+| `AGNI_MAX_FIM_FILE_SIZE_BYTES` | Maximum file size hashed during FIM scans (`100 MB`) | `104857600` | No |
+| `AGNI_MAX_SOCKETS_PER_CYCLE` | Upper bound on active sockets processed per poll cycle | `2000` | No |
+| `AGNI_DEMO_MODE_DEFAULT` | Starts the platform with synthetic sample mode enabled if `true` | `false` | No |
+| `AGNI_AI_PROVIDER` | Optional AI analyst provider (`none`, `ollama`, `hosted`) | `none` | No |
+| `AGNI_AI_OLLAMA_URL` | Local Ollama base URL when `AGNI_AI_PROVIDER=ollama` | `http://127.0.0.1:11434` | No |
+| `GEMINI_API_KEY` | Optional API key for hosted AI provider (never stored in Git) | *(unset)* | **Yes** |
+
+---
+
+## 🧠 Detection Engine
+
+The **Varuna** engine (`backend/app/engine/`) processes normalized events through three stages:
+1. **Normalization**: Maps OS telemetry into `NormalizedEvent` records with observed attributes (`actor_name`, `actor_cmdline`, `target_path`, `remote_ip`, `remote_port`, `metadata`).
+2. **AST Rule Matching**: Evaluates enabled YAML rules from `backend/rules/` against each event. Every rule includes an ID, MITRE ATT&CK mapping, severity, recursive condition tree (`all` / `any` / `not`), explanation, false-positive notes, and recommended investigation steps.
+3. **Sliding-Window Incident Correlation**: Groups matching detections sharing an entity (process, file path, or remote endpoint) within `correlation_window_seconds` into an `Incident`, preventing duplicate alert floods.
+
+### Example Detection Rule (`backend/rules/proc_shadow_copy_delete.yaml`)
 ```yaml
 id: AGNI-R-PROC-003
-title: Shadow Copy Deletion Attempt via Vssadmin
+name: Shadow Copy Deletion Attempt via Vssadmin
+description: Detects execution of vssadmin.exe to delete Volume Shadow Copies, a common pre-ransomware inhibit-system-recovery technique.
 severity: CRITICAL
-status: active
-mitre_attack:
-  tactic: Defense Evasion / Impact
-  technique: T1490
-conditions:
-  and:
+category: PROCESS
+mitre_tactic: Impact
+mitre_technique: T1490
+version: "1.0.0"
+enabled: true
+correlation_window_seconds: 300
+condition:
+  all:
     - field: category
-      operator: equals
+      op: equals
       value: PROCESS
     - field: action
-      operator: equals
+      op: equals
       value: spawned
-    - or:
+    - any:
         - field: actor_name
-          operator: equals
+          op: equals
           value: vssadmin.exe
         - field: actor_cmdline
-          operator: regex
-          value: (?i)vssadmin(\.exe)?\s+delete\s+shadows
-remediation:
-  summary: Adversary attempting to inhibit system recovery prior to encryption.
-  recommended_actions:
-    - Isolate endpoint from network immediately.
-    - Check for ransomware precursor binaries in %TEMP%.
+          op: regex
+          value: "(?i)vssadmin(\\.exe)?\\s+delete\\s+shadows"
+explanation: >
+  Observed fact: A process matching vssadmin shadow deletion syntax was spawned.
+  Interpretation: Adversaries frequently delete Volume Shadow Copies before deploying ransomware,
+  though backup software or administrators performing disk maintenance can also trigger this command.
+recommended_steps:
+  - Inspect the parent process (PPID) and user account that invoked vssadmin.exe.
+  - Check whether scheduled backup maintenance was active at the timestamp.
+  - Review recent File Integrity Monitoring (FIM) alerts for mass file modifications.
 ```
 
 ---
 
-## 📊 Platform Support Matrix
+## 🔒 Security & Privacy
 
-Agni runs across all three major desktop and server operating systems:
+- **What Agni Collects**: Process metadata, SHA-256 hashes of user-configured FIM directories, local network interface/socket metadata, passive ARP cache entries, and read-only startup entries.
+- **Where Data Is Stored**: Exclusively in a local SQLite database (`backend/data/agni.db`, excluded from Git) on your machine.
+- **Zero Automatic Cloud Transmission**: No telemetry leaves your machine unless you explicitly enable a hosted AI provider in Settings and confirm consent for an individual analysis request.
+- **Automatic Redaction**: Command lines and payloads pass through `TelemetryRedactor` to strip bearer tokens, API keys, passwords, and private credentials before storage or AI summarization.
+- **No Destructive Actions**: Agni never kills processes, deletes or quarantines files, modifies firewall rules, or installs kernel drivers.
+- **Tamper-Evident Audit Log**: Configuration changes, rule toggles, baseline updates, and report exports are recorded in a SHA-256 hash-chained audit table (`AuditLog`) verifiable via `/api/v1/audit/verify`.
 
-| Capability | Windows (10/11, Server) | Linux (Kernel 5.4+) | macOS (Sonoma, Sequoia) |
-| :--- | :---: | :---: | :---: |
-| **Process Tree & Resource Metrics** | ✅ Full | ✅ Full | ✅ Full |
-| **Command-Line Scrubbing** | ✅ Full | ✅ Full | ✅ Full |
-| **Active Sockets & PID Ownership** | ✅ Full | ✅ Full | ✅ Full |
-| **Passive ARP Table Discovery** | ✅ Full | ✅ Full | ✅ Full |
-| **File Integrity (Chunked SHA-256)**| ✅ Full | ✅ Full | ✅ Full |
-| **Autostart & Persistence Audit** | ✅ Registry & Startup | ✅ systemd & cron | ✅ launchd & LaunchAgents |
-| **Privilege Degradation Mode** | ✅ User-level safe | ✅ User-level safe | ✅ User-level safe |
-
-Read the full matrix in [`docs/platform-support.md`](docs/platform-support.md).
+See [`docs/threat-model.md`](docs/threat-model.md) for the complete STRIDE threat model and trust boundaries.
 
 ---
 
-## 🔒 Security & Privacy Guarantees
+## 🧪 Testing & Quality
 
-1. **Loopback Only (`127.0.0.1`)**: Agni rejects binding to external interfaces out of the box. Host telemetry never leaves the endpoint.
-2. **Zero Invasiveness / Non-Destructive**: Collects data through safe operating system query APIs. No kernel hooking, driver patching, or unconfirmed process terminations.
-3. **Telemetry Scrubbing**: Passwords, API tokens, Authorization headers, and sensitive environment variables are sanitized prior to persistence.
-4. **Cryptographic Immutability**: All analyst operations and configuration updates are chained using SHA-256. Any tampering breaks the chain.
-
-Read the detailed STRIDE threat analysis in [`docs/threat-model.md`](docs/threat-model.md).
-
----
-
-## 🧪 Testing & Verification
-
-Agni is backed by an extensive multi-tier verification suite:
+Run the automated verification suites from the repository root:
 
 ```bash
-# Backend pytest suite (unit, integration & rules)
+# 1. Backend unit, integration, security & detection rule tests (101 passed)
 python -m pytest tests/backend/ -v
 
-# Independent opaque-box E2E runner (4 tiers)
+# 2. 4-Tier End-to-End opaque-box verification runner (25 passed across 4 tiers)
 python tests/e2e/runner.py
 
-# Code style & PEP 8 linting
+# 3. Backend Ruff linting & formatting check
 python -m ruff check backend/ tests/ --config backend/pyproject.toml
 
-# Frontend component tests (Vitest)
-cd frontend && npm run test
+# 4. Frontend Vitest component & navigation suite (20 passed)
+cd frontend && npm run test -- --run
 
-# TypeScript type validation
-npx tsc --noEmit
+# 5. Frontend TypeScript typecheck & production build
+cd frontend && npx tsc --noEmit && npm run build
+```
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) automatically runs backend (`pytest`, E2E runner, `ruff`) and frontend (`vitest`, `tsc`, `vite build`) checks on every push and pull request.
+
+---
+
+## 📁 Project Structure
+
+```text
+Agni/
+├── .github/
+│   ├── ISSUE_TEMPLATE/          # Bug report and feature request templates
+│   ├── workflows/ci.yml         # Automated GitHub Actions CI pipeline
+│   └── PULL_REQUEST_TEMPLATE.md # Pull request verification checklist
+├── backend/
+│   ├── app/
+│   │   ├── api/                 # FastAPI route handlers (health, events, incidents, fim, network, rules, ai, etc.)
+│   │   ├── core/                # Config, loopback validation, CORS, path-traversal guards, logging
+│   │   ├── engine/              # Varuna AST rule evaluator, sliding-window correlator, normalizer
+│   │   ├── models/              # SQLAlchemy ORM models (Event, Incident, FIMBaseline, AuditLog, etc.)
+│   │   ├── platform/            # OS-specific adapters (Windows, Linux, macOS)
+│   │   ├── schemas/             # Pydantic v2 request/response schemas
+│   │   ├── services/            # FIM scanner, AI analyst, audit chain, sample scenario generator
+│   │   └── main.py              # FastAPI application entrypoint and lifespan manager
+│   ├── rules/                   # 18 declarative YAML detection rules mapped to MITRE ATT&CK
+│   ├── pyproject.toml           # Python project & Ruff configuration
+│   └── requirements.txt         # Pinned backend Python dependencies
+├── docs/
+│   ├── assets/                  # Original SVG branding and 1080p application screenshots
+│   ├── architecture.md          # Detailed system architecture and pipeline documentation
+│   ├── development.md           # Developer setup, testing, and troubleshooting guide
+│   ├── platform-support.md      # Cross-platform capability and permission matrix
+│   └── threat-model.md          # STRIDE threat model, trust boundaries, and limitations
+├── frontend/
+│   ├── public/                  # Favicon and static assets
+│   ├── src/
+│   │   ├── api/                 # Typed REST client for backend communication
+│   │   ├── assets/              # Agni SVG components and branding marks
+│   │   ├── components/          # Sidebar, Header, Modals, and shared UI primitives
+│   │   ├── context/             # Global application state, polling, and view routing
+│   │   └── views/               # All 12 SOC dashboard views
+│   ├── package.json             # Frontend dependencies and scripts
+│   └── vite.config.ts           # Vite bundler and local API proxy configuration
+├── scripts/
+│   ├── unix/                    # Bash start, stop, diagnostics, and optional service installer
+│   ├── windows/                 # PowerShell start, stop, diagnostics, and optional task installer
+│   └── capture_screenshots.py   # Reproducible headless Chrome screenshot generator
+├── tests/
+│   ├── backend/                 # Pytest unit, API, security, and rule engine test suite
+│   └── e2e/                     # 4-tier end-to-end verification harness and scenarios
+├── .env.example                 # Safe environment variable template (placeholders only)
+├── .gitignore                   # Excludes secrets, databases, virtualenvs, node_modules, caches
+├── CHANGELOG.md                 # Release notes for v1.0.0
+├── CODE_OF_CONDUCT.md           # Contributor Covenant Code of Conduct
+├── CONTRIBUTING.md              # Contribution guidelines and quality gates
+├── LICENSE                      # MIT License
+├── README.md                    # Project overview and documentation
+└── SECURITY.md                  # Vulnerability reporting policy and security scope
 ```
 
 ---
 
-## 👨‍💻 Author & Credits
+## 🗺️ Roadmap
 
-**Agni (अग्नि)** is designed and developed by **Aditya Zala**.
-
-- **Portfolio**: [https://adizala.me](https://adizala.me)
-- **GitHub**: [@adiz777](https://github.com/adiz777)
-- **Email**: [adizala7303@gmail.com](mailto:adizala7303@gmail.com)
+- **Implemented (`v1.0.0`)**
+  - [x] Cross-platform adapter architecture (`Windows`, `Linux`, `macOS`) with graceful privilege degradation
+  - [x] Agni Core process inventory, startup/persistence inspection, and chunked SHA-256 File Integrity Monitoring
+  - [x] Vayu network interface, socket-to-PID mapping, and passive ARP device inventory
+  - [x] Varuna recursive AST rule engine, 18 default YAML rules, and sliding-window incident correlation
+  - [x] 12-view React + TypeScript SOC dashboard with JSON, CSV, and HTML report exports
+  - [x] SHA-256 hash-chained tamper-evident audit logging and optional privacy-preserving AI analyst
+- **Planned (Future Milestones)**
+  - [ ] Native event-driven filesystem watchers (`ReadDirectoryChangesW` / `inotify` / `FSEvents`) alongside periodic SHA-256 baseline scans
+  - [ ] Windows Event Log (ETW / Security Channel) and Linux `auditd` stream adapters
+  - [ ] Out-of-order historical event replay watermarking
+  - [ ] Sigma-to-Varuna YAML rule converter CLI
 
 ---
 
-## 📄 License
+## 🤝 Contributing
 
-This project is licensed under the [MIT License](LICENSE) - Copyright © 2026 Aditya Zala.
+Contributions—whether new detection rules, platform adapter enhancements, bug fixes, or documentation improvements—are welcome! Please review [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, coding standards, and pull request requirements, and follow our [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
+---
+
+## 🚨 Security Reporting
+
+Please **do not** report security vulnerabilities through public GitHub issues. Refer to [`SECURITY.md`](SECURITY.md) for responsible disclosure instructions and supported versions.
+
+---
+
+## 📄 License & Attribution
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for full license text. All third-party libraries (`FastAPI`, `Pydantic`, `SQLAlchemy`, `psutil`, `React`, `Lucide`, `Tailwind CSS`, `Vite`) are used in accordance with their respective open-source licenses.
+
+---
+
+## 👨‍💻 Author & Project Links
+
+Built and maintained by **Aditya Zala**:
+- **Repository**: [https://github.com/adiz777/Agni](https://github.com/adiz777/Agni)
+- **GitHub Profile**: [https://github.com/adiz777](https://github.com/adiz777)
+- **Website / Portfolio**: [https://adizala.me](https://adizala.me)
+
+---
+
+<div align="center">
+  <sub><b>Agni (अग्नि)</b> — Built for transparent, local-first defensive security engineering. Explore the source, test the rules, open an issue, or contribute a pull request.</sub>
+</div>
