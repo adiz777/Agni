@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-FIM-004",
+  "name": "Critical Configuration File Deletion",
+  "description": "Detects deletion of monitored configuration files (.conf, .yaml, .json, .ini, .xml).",
+  "severity": "Medium",
+  "category": "file_integrity",
+  "source": "fim",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "file_integrity"},
+      {"field": "action", "operator": "equals", "value": "deleted"},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)(?:\\.conf|\\.yaml|\\.json|\\.ini|\\.xml)$"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Removal of baseline configuration files may signal anti-forensics activity or service impairment.",
+  "investigation_steps": [
+    "Verify whether deletion was part of a planned administrative rollout.",
+    "Inspect associated process termination and event logs.",
+    "Restore file from verified backup if unauthorized."
+  ],
+  "mitre_attack": "T1070.004",
+  "version": "1.0.0",
+  "enabled": true
+}

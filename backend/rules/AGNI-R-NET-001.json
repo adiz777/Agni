@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-NET-001",
+  "name": "Outbound Connection to Known Reverse Shell / C2 Port",
+  "description": "Detects an active TCP connection to non-standard ports commonly configured for reverse shells (4444, 5555, 1337, 6667, 9001, 31337).",
+  "severity": "High",
+  "category": "network",
+  "source": "vayu",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "network"},
+      {"field": "action", "operator": "equals", "value": "connected"},
+      {"field": "details.remote_port", "operator": "in", "value": [4444, 5555, 1337, 6667, 9001, 31337]}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "actor.pid",
+  "explanation": "Default frameworks like Metasploit and netcat frequently use ports like 4444 and 1337 for command-and-control listeners.",
+  "investigation_steps": [
+    "Identify the process name, path, and PID holding the socket.",
+    "Look up the destination IP reputation and geolocation.",
+    "Check command line arguments and recent process activity of the owning PID."
+  ],
+  "mitre_attack": "T1571",
+  "version": "1.0.0",
+  "enabled": true
+}

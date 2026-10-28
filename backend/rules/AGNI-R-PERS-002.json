@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-PERS-002",
+  "name": "Startup Folder Shortcut / Executable Dropped",
+  "description": "Detects a new executable or shortcut (.lnk, .exe, .bat) created in user or system Startup folders.",
+  "severity": "High",
+  "category": "persistence",
+  "source": "persistence",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "persistence"},
+      {"field": "action", "operator": "equals", "value": "created"},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)Programs[/\\\\]Startup"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Dropping shortcuts into the Startup folder ensures payload execution upon next user logon without requiring registry manipulation.",
+  "investigation_steps": [
+    "Inspect shortcut target path and argument list.",
+    "Check creation timestamp and identify the creator process.",
+    "Verify whether the file was placed by legitimate application installer."
+  ],
+  "mitre_attack": "T1547.001",
+  "version": "1.0.0",
+  "enabled": true
+}

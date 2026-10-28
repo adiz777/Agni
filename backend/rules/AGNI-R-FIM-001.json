@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-FIM-001",
+  "name": "System Hosts File Modification",
+  "description": "Detects alteration or addition of entries in the operating system hosts resolution file.",
+  "severity": "High",
+  "category": "file_integrity",
+  "source": "fim",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "file_integrity"},
+      {"field": "action", "operator": "in", "value": ["modified", "created"]},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)(?:etc[/\\\\]hosts|drivers[/\\\\]etc[/\\\\]hosts)"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Adversaries modify the hosts file to redirect legitimate security updates or banking domains to malicious IP addresses.",
+  "investigation_steps": [
+    "Review the diff in hosts file content to see added host mappings.",
+    "Check active process list for processes that had write handles to the file.",
+    "Flush local DNS cache and verify integrity of DNS settings."
+  ],
+  "mitre_attack": "T1565.001",
+  "version": "1.0.0",
+  "enabled": true
+}

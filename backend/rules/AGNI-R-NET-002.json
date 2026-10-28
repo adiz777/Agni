@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-NET-002",
+  "name": "LOLBin Outbound Network Connection",
+  "description": "Detects network connection established by administrative utilities that should not normally communicate externally (certutil, cmd, rundll32, regsvr32, vssadmin).",
+  "severity": "Medium",
+  "category": "network",
+  "source": "vayu",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "network"},
+      {"field": "actor.name", "operator": "in", "value": ["certutil.exe", "cmd.exe", "rundll32.exe", "regsvr32.exe", "vssadmin.exe"]},
+      {"field": "details.status", "operator": "in", "value": ["ESTABLISHED", "SYN_SENT"]}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "actor.pid",
+  "explanation": "Living-off-the-Land Binaries initiating direct external connections typically represent payload download or C2 check-in.",
+  "investigation_steps": [
+    "Review the full command line of the originating utility.",
+    "Inspect destination IP address and port.",
+    "Correlate FIM changes to see if a file was written to disk."
+  ],
+  "mitre_attack": "T1105",
+  "version": "1.0.0",
+  "enabled": true
+}

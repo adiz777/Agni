@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-FIM-003",
+  "name": "SSH Authorized Keys File Alteration",
+  "description": "Detects addition or modification of SSH authorized_keys file on Linux or macOS endpoints.",
+  "severity": "High",
+  "category": "file_integrity",
+  "source": "fim",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "file_integrity"},
+      {"field": "action", "operator": "in", "value": ["modified", "created"]},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)\\.ssh/authorized_keys$"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Backdooring SSH authorized_keys grants an adversary persistent, passwordless interactive access to the host.",
+  "investigation_steps": [
+    "Inspect the authorized_keys file to determine the new public key identity/comment.",
+    "Check recent SSH network connections to identify inbound logins.",
+    "Audit active user sessions and recent sudo command executions."
+  ],
+  "mitre_attack": "T1098.004",
+  "version": "1.0.0",
+  "enabled": true
+}

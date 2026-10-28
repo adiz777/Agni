@@ -1,0 +1,30 @@
+[Unit]
+Description=Agni Local Threat Detection & Endpoint Monitoring Service
+Documentation=https://github.com/adiz777/Agni
+After=network.target
+
+[Service]
+Type=simple
+# User-level service: place in ~/.config/systemd/user/agni.service
+# Manage with:
+#   systemctl --user daemon-reload
+#   systemctl --user enable agni.service
+#   systemctl --user start agni.service
+#   systemctl --user status agni.service
+
+WorkingDirectory=%h/agni/backend
+ExecStart=%h/agni/scripts/unix/start-agni.sh
+ExecStop=%h/agni/scripts/unix/stop-agni.sh
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+# Security sandboxing
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/agni/data %h/agni/exports %h/agni
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

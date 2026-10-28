@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Agni macOS LaunchAgent Template
+  Install:
+    cp com.agni.monitor.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.agni.monitor.plist
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.agni.monitor.plist
+    rm ~/Library/LaunchAgents/com.agni.monitor.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agni.monitor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>exec "${HOME}/agni/scripts/unix/start-agni.sh"</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/agni.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/agni.stderr.log</string>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

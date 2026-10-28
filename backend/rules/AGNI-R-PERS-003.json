@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-PERS-003",
+  "name": "New Systemd Service or LaunchAgent Created",
+  "description": "Detects creation of a new service unit file in /etc/systemd/system or LaunchAgent plist in ~/Library/LaunchAgents.",
+  "severity": "High",
+  "category": "persistence",
+  "source": "persistence",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "persistence"},
+      {"field": "action", "operator": "equals", "value": "created"},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)(?:systemd/system|LaunchAgents)/[^/]+\\.(?:service|plist)$"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Adversaries install custom systemd units or LaunchAgents to survive reboots and maintain persistent daemon execution.",
+  "investigation_steps": [
+    "Read the ExecStart or ProgramArguments defined in the unit/plist.",
+    "Verify whether the target binary exists and hash its contents.",
+    "Check user permissions and audit log for who installed the service."
+  ],
+  "mitre_attack": "T1543.002",
+  "version": "1.0.0",
+  "enabled": true
+}

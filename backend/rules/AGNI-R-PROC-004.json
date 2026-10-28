@@ -1,0 +1,26 @@
+{
+  "id": "AGNI-R-PROC-004",
+  "name": "Suspicious Binary Execution from Temporary Directory",
+  "description": "Detects executable launch originating from user AppData\\Local\\Temp or Unix /tmp directories.",
+  "severity": "Medium",
+  "category": "process",
+  "source": "agni_core",
+  "match_conditions": {
+    "or": [
+      {"field": "actor.path", "operator": "regex", "value": "(?i)\\\\AppData\\\\Local\\\\Temp\\\\[^\\\\]+\\.exe"},
+      {"field": "actor.path", "operator": "regex", "value": "^/tmp/[^/]+$"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "actor.pid",
+  "explanation": "Droppers and exploit kits frequently stage their secondary executable payloads inside world-writable temporary directories.",
+  "investigation_steps": [
+    "Compute SHA-256 hash of the binary in the temporary folder.",
+    "Identify the dropping process by inspecting parent PID and recent FIM creation events.",
+    "Examine command-line parameters and subsequent network sockets."
+  ],
+  "mitre_attack": "T1036.005",
+  "version": "1.0.0",
+  "enabled": true
+}

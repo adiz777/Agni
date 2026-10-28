@@ -1,0 +1,25 @@
+{
+  "id": "AGNI-R-PROC-005",
+  "name": "Reconnaissance Command Burst",
+  "description": "Detects multiple endpoint discovery commands (whoami, hostname, net user, id, ipconfig, ifconfig) executed within a short time window.",
+  "severity": "Medium",
+  "category": "process",
+  "source": "agni_core",
+  "match_conditions": {
+    "field": "actor.name",
+    "operator": "in",
+    "value": ["whoami.exe", "whoami", "hostname.exe", "hostname", "net.exe", "id", "ipconfig.exe", "ifconfig"]
+  },
+  "correlation_window": 30,
+  "threshold": 3,
+  "group_by": "host.hostname",
+  "explanation": "Adversaries perform situational awareness discovery immediately after gaining initial access to enumerate privileges and host identity.",
+  "investigation_steps": [
+    "Correlate the parent process that invoked these reconnaissance commands.",
+    "Determine if the parent process is a shell spawned by a web server, macro, or unexpected service.",
+    "Review user authentication logs for unexpected interactive sessions."
+  ],
+  "mitre_attack": "T1082",
+  "version": "1.0.0",
+  "enabled": true
+}

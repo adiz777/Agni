@@ -1,0 +1,25 @@
+{
+  "id": "AGNI-R-PROC-006",
+  "name": "Double Extension Executable Execution",
+  "description": "Detects execution of a binary disguised with deceptive double extensions (e.g. invoice.pdf.exe).",
+  "severity": "High",
+  "category": "process",
+  "source": "agni_core",
+  "match_conditions": {
+    "field": "actor.name",
+    "operator": "regex",
+    "value": "(?i)\\.(?:pdf|docx?|xlsx?|jpg|png|txt)\\.exe$"
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "actor.pid",
+  "explanation": "A classic spearphishing tactic where malicious executables use legitimate document icons and double extensions to trick users into running them.",
+  "investigation_steps": [
+    "Quarantine or capture the executable for static analysis.",
+    "Determine origin location (e.g., Downloads folder, browser cache, email client attachment cache).",
+    "Check FIM and persistence logs for unauthorized modifications."
+  ],
+  "mitre_attack": "T1036.007",
+  "version": "1.0.0",
+  "enabled": true
+}

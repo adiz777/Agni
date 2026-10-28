@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-PERS-001",
+  "name": "Windows Registry Run Key Persistence Added",
+  "description": "Detects addition of a new startup program under HKLM or HKCU CurrentVersion\\Run registry keys.",
+  "severity": "High",
+  "category": "persistence",
+  "source": "persistence",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "persistence"},
+      {"field": "action", "operator": "equals", "value": "created"},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)CurrentVersion\\\\Run"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Registry Run keys are the most prevalent persistence mechanism on Windows, automatically executing registered binaries on user login.",
+  "investigation_steps": [
+    "Inspect the path and command stored in the new registry value.",
+    "Check the digital signature and SHA-256 hash of the target executable.",
+    "Identify the process that performed the registry write."
+  ],
+  "mitre_attack": "T1547.001",
+  "version": "1.0.0",
+  "enabled": true
+}

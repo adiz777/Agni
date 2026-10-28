@@ -1,0 +1,27 @@
+{
+  "id": "AGNI-R-FIM-002",
+  "name": "Critical System Binary Integrity Violation",
+  "description": "Detects modification or hash replacement of core system executables in System32 or /bin.",
+  "severity": "Critical",
+  "category": "file_integrity",
+  "source": "fim",
+  "match_conditions": {
+    "and": [
+      {"field": "category", "operator": "equals", "value": "file_integrity"},
+      {"field": "action", "operator": "equals", "value": "modified"},
+      {"field": "target.identifier", "operator": "regex", "value": "(?i)(?:/bin/|/usr/bin/|system32/)[^/\\\\]+(?:\\.(?:exe|dll|so))?$"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "target.identifier",
+  "explanation": "Direct binary replacement of system files indicates advanced persistence, rootkit installation, or Trojanized binaries.",
+  "investigation_steps": [
+    "Compare binary SHA-256 with vendor-known good hashes.",
+    "Inspect file creation timestamp and owner permissions.",
+    "Review audit logs to identify which user/process modified the file."
+  ],
+  "mitre_attack": "T1574.001",
+  "version": "1.0.0",
+  "enabled": true
+}

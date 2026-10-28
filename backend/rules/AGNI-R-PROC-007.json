@@ -1,0 +1,26 @@
+{
+  "id": "AGNI-R-PROC-007",
+  "name": "Rundll32 Executing Remote or Script Protocol",
+  "description": "Detects rundll32.exe executing javascript:, vbscript:, or remote URL protocols.",
+  "severity": "High",
+  "category": "process",
+  "source": "agni_core",
+  "match_conditions": {
+    "and": [
+      {"field": "actor.name", "operator": "equals", "value": "rundll32.exe"},
+      {"field": "actor.cmdline", "operator": "regex", "value": "(?i)(?:javascript|vbscript|mshtml|http)"}
+    ]
+  },
+  "correlation_window": 0,
+  "threshold": 1,
+  "group_by": "actor.pid",
+  "explanation": "Rundll32 execution with inline script engines is a known defense evasion technique to bypass binary execution policies.",
+  "investigation_steps": [
+    "Inspect full command line arguments for injected script content.",
+    "Analyze process network socket connections.",
+    "Check child processes spawned under rundll32."
+  ],
+  "mitre_attack": "T1218.011",
+  "version": "1.0.0",
+  "enabled": true
+}
